@@ -69,6 +69,51 @@ def write_bronze(df: DataFrame, paths: S3Paths) -> None:
 
 
 def transform_to_silver(df: DataFrame) -> DataFrame:
+    """Perform comprehensive cleansing and validation for the silver layer.
+
+    Applies general data sanitization followed by domain-specific checks
+    tailored for payments and banking datasets.
+
+    General Sanitization:
+    - Drops rows with null/NaN values in critical columns
+    - Removes duplicate records
+    - Trims whitespace and standardizes string column casing
+    - Validates string column format (email format, ASCII-only, length limits)
+    - Ensures presence of key identifier fields
+
+    Numeric & Date Validations:
+    - Validates amounts are non-negative and positive for transactions
+    - Parses and validates dates (correct format, not in future)
+    - Ensures numeric sanity for financial amounts
+
+    Payment-Specific Validations:
+    - Validates currency codes (3-letter ISO format)
+    - Validates transaction status against allowed values
+    - Performs Luhn check on card numbers
+    - Requires merchant_id and acquirer_id presence
+
+    Banking-Specific Validations:
+    - Validates IBAN format
+    - Ensures transaction_date <= settlement_date
+    - Validates transaction_type against allowed banking operations
+    - Ensures account_balance is non-negative
+    - Validates branch_code format (numeric only)
+
+    Fraud & Anomaly Detection:
+    - Velocity checks: Flags suspicious rapid repeat transactions on same card
+    - Merchant anomalies: Filters outliers using z-score (>5 std devs)
+    - MCC validation: Checks format and filters suspicious merchant codes
+    - IP/geo consistency: Flags high-value transactions with mismatched countries
+    - PII protection: Masks card numbers, hashes email and phone
+
+    Cross-Field Consistency:
+    - Validates currency aligns with cardholder country (EUR/European example)
+
+    Args:
+        df: Input DataFrame at bronze layer
+
+    Returns:
+        Cleansed and validated DataFrame suitable for analytics
     """Perform cleansing operations to produce the silver layer.
 
     This function applies both general sanitization and a set of

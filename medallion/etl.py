@@ -25,7 +25,6 @@ from pyspark.sql.functions import (
     collect_list,
     countDistinct,
     date_trunc,
-    lit,
 )
 from pyspark.sql.types import BooleanType
 from .config import S3Paths, MySQLConfig
